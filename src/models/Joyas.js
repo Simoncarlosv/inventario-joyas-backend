@@ -74,7 +74,7 @@ const GetJoyasFiltro = async (precio_min = '', precio_max = '', categoria = '', 
         const SQLQuery = format(`
             SELECT * 
              FROM inventario 
-             WHERE ${query}
+             ${query ? `WHERE ${query}` : ''} 
              LIMIT %s
              OFFSET %s`, // el valor de query se arma a traves del filtro con el .join
             ...values,
@@ -143,32 +143,6 @@ const handleAddFilters = (filters) => {
         values
     }
 }
-
-
-
-// let filtros = []
-//         const values = []
-
-//         const agregarFiltro = (campo, comparador, valor) => {
-//             values.push(valor)
-//             const { length } = filtros
-//             filtros.push(`${campo} ${comparador} $${length + 1}`)
-//         }
-
-//         if (precio_max) agregarFiltro('precio', '<=', precio_max)
-//         if (precio_min) agregarFiltro('precio', '>=', precio_min)
-//         if (categoria) agregarFiltro('categoria', '=', 'categoria')
-//         if (metal) agregarFiltro('metal', '=', 'metal')
-
-//         let consulta = "SELECT * FROM inventario"
-
-//         if (filtros.length > 0) {
-//             filtros = filtros.join(" AND ")
-//             consulta += ` WHERE ${filtros}`
-//         }
-
-//         const { rows: inventario } = await pool.query(consulta, values)
-//         return inventario
 
 
 
