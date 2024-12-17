@@ -6,8 +6,8 @@ const { GetAllJoyasController,
 
 const router = Router()
 
+router.get('/joyas/filtered',  GetJoyasFiltroController)
 router.get('/joyas', GetAllJoyasController)// para HATEOS
 router.get('/joyas/:id', GetSingleJoyasController)// para UNA JOYA por ID
-router.get('/joyas/filtered',  GetJoyasFiltroController)
 
 module.exports = router

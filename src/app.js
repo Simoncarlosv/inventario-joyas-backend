@@ -1,12 +1,14 @@
 const express = require('express')
 const morgan = require('morgan')
 const routes = require('./routes/routes')
+const { loggerMiddleware } = require('./middlewares/loggerMiddleware')
 const { errorMiddleware } = require('./middlewares/errorMiddlewares')
 
 
 const app = express()
 
 //Utilizar Middlewares
+app.use(loggerMiddleware);
 app.use(morgan('dev'))
 
 //Utilizar Routes
