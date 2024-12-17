@@ -30,9 +30,9 @@ const GetSingleJoyasController = async (req, res, next)=> {
 
 const GetJoyasFiltroController = async (req, res, next)=> {
     try {
-        const { precio_min, precio_max, categoria, metal, page, limit } = req.query
+        const { precio_min, precio_max, categoria, metal } = req.query
 
-        const response = await GetJoyasFiltro( precio_min, precio_max, categoria, metal, page, limit )
+        const response = await GetJoyasFiltro( precio_min, precio_max, categoria, metal )
 
         res.status(200).json(response)
     } catch (error) {

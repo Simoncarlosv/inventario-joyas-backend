@@ -21,7 +21,7 @@ const GetAllJoyas = async (limit = 10, page = 1, order_by = "id_ASC") => {
         const SQLQuery = format(
             `SELECT id, nombre, categoria, metal, precio 
              FROM inventario 
-             ORDER BY %s %s 
+             ORDER BY %I %s 
              LIMIT %s OFFSET %s`,
             campo,        // Campo para ordenar (como identificador)
             direccion,    // Dirección de orden (como cadena segura)
@@ -63,70 +63,78 @@ const GetSingleJoyas = async (id) => {
 
 
 // Get para filtrado
-const GetJoyasFiltro = async (precio_min = '', precio_max = '', categoria = '', metal = '', page = 1, limit = 4) => {
+const GetJoyasFiltro = async (precio_min = '', precio_max = '', categoria = '', metal = '') => {
     try {
-        const { query, values } = handleAddFilters({ precio_min, precio_max, categoria, metal });
-        const offset = Math.abs(page - 1) * limit;
 
-        // Construir la consulta SQL de forma segura
-        const SQLQuery = `
+        // Constante para traer los valores para el query y los values del filtro que se llama 'handleAddFilters'
+        const { query, values } = handleAddFilters({precio_min, precio_max, categoria, metal})
+        // Construir la consulta SQL con pg-format
+        const SQLQuery = format(`
             SELECT * 
-            FROM inventario
-            ${query ? `WHERE ${query}` : ''}
-            LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
-        
-        // Agregar `limit` y `offset` al array de valores
-        const finalValues = [...values, limit, offset];
-
-        // Ejecutar la consulta
-        const { rows, rowCount } = await pool.query(SQLQuery, finalValues);
-
-        // Obtener el total de joyas para el cálculo de páginas
-        const { rowCount: totalCount } = await pool.query('SELECT * FROM inventario');
-        const pages = Math.ceil(totalCount / limit);
-
+             FROM inventario 
+             ${query ? `WHERE ${query}` : ''}`, // el valor de query se arma a traves del filtro con el .join
+            ...values,     // values del filtro
+        );
+        // Ejecutar la consulta principal
+        const { rows } = await pool.query(SQLQuery)
         // Retornar la estructura HATEOAS
-        return HATEOAS({ totalCount, count: rowCount, pages, results: rows, page, limit });
+        return rows
     } catch (error) {
-        throw error;
+        throw error
     }
-};
+}
+
 
 
 
 //FUNCION PARA FILTRADO
 const handleAddFilters = (filters) => {
-    const querys = [];
-    const values = [];
+    const querys = []
+    const values = []
 
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(filters).forEach((filter) => {
+        // EXPLICACION OBJECT.ENTRIES
+        //Toma un objeto "filters" y lo convierte en formato de arreglo
+        // Viene asi EJ: [precio_min = '', precio_max = 2000, categoria = 'anillo', metal = '']
+        // Proceso de object.entries:
+        // [precio_min = ''], = const [precio_min = ''] = filter
+        //    key       value
+        //
+        // [precio_max = 2000], 
+        // [categoria = 'anillo'], 
+        // [metal = ''] 
+        const [key, value] = filter
+
         if (value) {
             switch (key) {
                 case 'precio_max':
-                    querys.push(`precio <= $${values.length + 1}`);
-                    values.push(value);
+                    querys.push(`precio <= %s`)
+                    values.push(value)
                     break;
                 case 'precio_min':
-                    querys.push(`precio >= $${values.length + 1}`);
-                    values.push(value);
+                    querys.push(`precio >= %s`)
+                    values.push(value)
                     break;
                 case 'categoria':
-                    querys.push(`categoria ILIKE $${values.length + 1}`);
-                    values.push(`%${value}%`);
+                    querys.push(`categoria ILIKE '%s'`)
+                    values.push(value)
                     break;
                 case 'metal':
-                    querys.push(`metal ILIKE $${values.length + 1}`);
-                    values.push(`%${value}%`);
+                    querys.push(`metal ILIKE '%s'`)
+                    values.push(value)
+                    break;
+            
+                default:
                     break;
             }
         }
-    });
+    })
 
     return {
-        query: querys.join(' AND '),
-        values,
-    };
-};
+        query: querys.join(" AND "),
+        values
+    }
+}
 
 
 
